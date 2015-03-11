@@ -1,5 +1,10 @@
+'''
+Use by calling Unscrabble.py WORD
+To sort by length, Unscrabble.py WORD char
+'''
 import argparse
 import time
+import getdef
 
 def tally_score(word):
 	score = 0
@@ -21,10 +26,26 @@ def by_value(found_words):
 	for word in sorted(found_words, key=found_words.get, reverse=True):
 		print word + "\t" + str(found_words[word])
 
-def main(tiles, sort):
+	
+def is_rack_in_word(rack ,word):
+		used_letters = ''
+		for letter in rack.lower():
+			if letter in word:
+				rack = rack.replace(letter, '', 1)				
+				used_letters = used_letters + letter
+				if sorted(used_letters) == sorted(word) and len(used_letters) > 1:
+					return True
+				
+def create_word_score_dictionary(words):
+	scored_words = {}
+	for word in words:
+		scored_words[word] = tally_score(word)
+	return scored_words	
+
+def main(rack, sort):
 	start = time.clock()
-	filename = 'sowpods.txt'
-	# filename = 'scrabble.txt'
+	# filename = 'sowpods.txt'
+	filename = 'scrabble.txt'
 
 	wordlist = []
 	with open(filename, 'r') as f:
@@ -34,20 +55,11 @@ def main(tiles, sort):
 
 	valid_words = []
 	for word in wordlist:
-		rack = tiles
-		used_letters = ''
-		for letter in rack.lower():
-			if letter in word:
-				rack = rack.replace(letter, '', 1)				
-				used_letters = used_letters + letter
-				if sorted(used_letters) == sorted(word):# and len(used_letters) > 1:
-					valid_words.append(word)
-	
-	# create dictionary to access scores on each word
-	found_words = {}
-	for word in valid_words:
-		found_words[word] = tally_score(word)
+		if is_rack_in_word(rack, word):
+			valid_words.append(word)
 
+	found_words = create_word_score_dictionary(valid_words)
+	
 	if sort.lower() != "v":	
 		by_length(found_words)
 	else:
@@ -56,11 +68,19 @@ def main(tiles, sort):
 	print len(valid_words), " possible words using ", rack.upper()
 	end = time.clock()
 	print "Elapsed time ", end-start, " seconds."
+	while True:
+		word = raw_input("Type word you would like to define. ('q' to quit)\t")
+		if word.lower() == 'q':
+			break
+		print getdef.define(word)
+		print "-" * 72
 
-parser = argparse.ArgumentParser()
-# Accepting a variable called "rack", and it is a "string"
-# If you want to work with numbers you could use 'type=int/float/etc...'
-parser.add_argument('rack',type=str)
-parser.add_argument('sort', nargs='?',type=str, default='v')
-args = parser.parse_args()
-main(args.rack, args.sort)
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument('rack',type=str)
+	parser.add_argument('sort', nargs='?',type=str, default='v')
+	args = parser.parse_args()
+	if len(args.rack) > 7:
+		print "7 letters only"
+		exit()	
+	main(args.rack, args.sort)
